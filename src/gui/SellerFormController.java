@@ -1,9 +1,11 @@
 	package gui;
 	
 	import java.net.URL;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -73,7 +75,7 @@ import model.services.SellerService;
 		private Label labelErrorBirthDate;
 		
 		@FXML
-		private Label labelErrorSalary;
+		private Label labelErrorBaseSalary;
 		
 		@FXML
 		private Button btSave;
@@ -137,6 +139,25 @@ import model.services.SellerService;
 			}
 			obj.setName(txtName.getText());
 			
+			if(txtEmail.getText() == null || txtEmail.getText().trim().equals("")) {
+				exception.addError("email", "Field can't be empy");
+			}
+			obj.setEmail(txtEmail.getText());
+			
+			if(dpBirthDate.getValue() == null) {
+				exception.addError("birthDate", "Field can't be empy");
+			}else {
+			Instant instant = Instant.from(dpBirthDate.getValue().atStartOfDay(ZoneId.systemDefault()));
+			obj.setBirthDate(Date.from(instant));
+			}
+			
+			if(txtBaseSalary.getText() == null || txtBaseSalary.getText().trim().equals("")) {
+				exception.addError("baseSalary", "Field can't be empy");
+			}
+			obj.setBaseSalary(Utils.tryParseToDouble(txtBaseSalary.getText()));
+			
+			obj.setDepartment(comboBoxDepartment.getValue());
+			
 			if(exception.getErrors().size() > 0) {
 				throw exception;
 			}
@@ -170,9 +191,11 @@ import model.services.SellerService;
 			if(entity == null) {
 				throw new IllegalStateException("Entity was null"); 
 			}
+			
 			txtId.setText(String.valueOf(entity.getId()));
 			txtName.setText(entity.getName());
 			txtEmail.setText(entity.getEmail());
+			
 			Locale.setDefault(Locale.US);
 			txtBaseSalary.setText(String.format("%.2f",entity.getBaseSalary()));
 			if(entity.getBirthDate() != null) {
@@ -199,12 +222,17 @@ import model.services.SellerService;
 		private void setErrorMessages(Map<String, String> errors) {
 			Set<String> fields = errors.keySet();
 			
-			if(fields.contains("name")) {
-				labelErrorName.setText(errors.get("name"));
-			}
+			labelErrorName.setText((fields.contains("name") ? errors.get("name") : "" ));
+			
+			labelErrorEmail.setText((fields.contains("email") ? errors.get("email") : "" ));
+			
+			labelErrorBirthDate.setText((fields.contains("birthDate") ? errors.get("birthDate") : "" ));
+			
+			labelErrorBaseSalary.setText((fields.contains("baseSalary") ? errors.get("baseSalary") : "" ));
+			
 		}
 		
-		private    void initializeComboBoxDepartment() { 
+		private void initializeComboBoxDepartment() { 
 			Callback<ListView<Department>, ListCell<Department>> factory = lv -> new ListCell<Department>() { 
 				 @Override
 			     protected void updateItem(Department item, boolean empty) { 
